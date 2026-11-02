@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-grid: #f3f4f6;
+            --dot-color: #cbd5e1;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text-main: #1f2937;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka', 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-grid);
+            background-image: radial-gradient(var(--dot-color) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Workspace Layout */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            padding: 24px;
+            align-items: stretch;
+        }
+
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        /* Sound Monitor Card */
+        .sound-card {
+            padding: 20px;
+            gap: 0;
+        }
+
+        /* Top Banner */
+        .sound-banner {
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .sound-banner.warning {
+            background: #fee2e2;
+            border-color: #fecaca;
+            animation: pulse-red 1s infinite alternate;
+        }
+        .banner-icon { font-size: 1.5rem; margin-bottom: 2px; }
+        .banner-title { font-size: 1.15rem; font-weight: 700; color: #166534; }
+        .sound-banner.warning .banner-title { color: #991b1b; }
+        .banner-sub { font-size: 0.8rem; color: #15803d; font-weight: 500; }
+        .sound-banner.warning .banner-sub { color: #b91c1c; }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            100% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+        }
+
+        /* Middle Section: Vertical Meter + Stats */
+        .sound-middle {
+            flex: 1;
+            min-height: 140px;
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        /* Vertical Pill Meter */
+        .vertical-meter-container {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .vertical-pill {
+            width: 100%;
+            flex: 1;
+            background: #f1f5f9;
+            border-radius: 35px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .pill-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: #10b981;
+            transition: height 0.05s linear, background 0.2s;
+            border-radius: 0 0 35px 35px;
+        }
+        .limit-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 60%;
+            border-top: 2px dashed #ef4444;
+            z-index: 10;
+            transition: bottom 0.1s ease;
+        }
+        .limit-text {
+            position: absolute;
+            right: 4px;
+            top: -10px;
+            font-size: 0.55rem;
+            font-weight: 800;
+            color: #ef4444;
+            background: white;
+            padding: 0 2px;
+            border-radius: 4px;
+        }
+
+        /* Stats Stack */
+        .sound-stats {
+			display: flex;
+			flex-direction: column;
+			gap: 3px;
+			flex: 0 0 15%;
+			min-width: 56px;
+		}
+		.stat-box {
+			flex: 1 1 0;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: #ffffff;
+			border: 1px solid var(--border-color);
+			border-radius: 10px;
+			padding: 6px 2px;
+			text-align: center;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+		}
+        .stat-label {
+            font-size: 0.5rem;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.2px;
+            line-height: 1.2;
+            margin-bottom: 2px;
+            display: block;
+        }
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+        .reset-count-btn {
+            display: block;
+            margin: 4px auto 0;
+            padding: 2px 6px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #b45309;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .reset-count-btn:hover { background: #fde68a; }
+
+        /* Bottom Controls Box */
+        .sound-controls-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .control-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .control-val {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0284c7;
+        }
+
+        /* Chunky Slider Track */
+        .sound-controls-box input[type="range"] {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            accent-color: #0284c7;
+            cursor: pointer;
+            margin-top: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        /* Chunky Slider Thumb */
+        .sound-controls-box input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #0284c7;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            transition: transform 0.1s ease;
+        }
+        .sound-controls-box input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        .control-select {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            background: white;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            outline: none;
+        }
+        .toggle-hint {
+            font-size: 0.7rem;
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        /* Switch Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* Center Timer Card */
+        .timer-card {
+            padding: 24px;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -2px;
+            color: #0f172a;
+            margin: 15px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-adjustments { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 10px; }
+
+        .pill-btn {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #475569;
+            transition: background 0.2s;
+        }
+        .pill-btn:hover { background: #f1f5f9; }
+
+        .timer-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+        .main-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .main-btn:hover { background: var(--primary-hover); }
+        .main-btn.secondary { background: #f8fafc; color: #334155; border: 1px solid var(--border-color); }
+        .main-btn.secondary:hover { background: #f1f5f9; }
+
+        /* Timer card layout + local clock */
+        .timer-main { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .clock-box { width: 100%; margin-top: 12px; padding: 10px; border-radius: 12px; background: #ecfeff; border: 1px solid #a5f3fc; }
+        .clock-label { font-size: 0.7rem; font-weight: 700; color: #0e7490; letter-spacing: 0.5px; }
+        .clock-time { font-size: 1.5rem; font-weight: 700; color: #0891b2; font-variant-numeric: tabular-nums; }
+
+        /* Right Assignment Card */
+        .assignment-card { padding: 24px; display: flex; flex-direction: column; }
+        .welcome-title { font-size: 1.8rem; font-weight: 700; color: #7c3aed; margin-bottom: 2px; }
+        .sub-teacher { font-size: 0.95rem; font-weight: 600; color: #d97706; margin-bottom: 16px; }
+        .assignments-heading { font-size: 1.1rem; font-weight: 700; text-decoration: underline; margin-bottom: 8px; color: #1e293b; }
+
+		/* Rich Text Editor */
+		.editor-toolbar {
+			display: flex;
+			flex-wrap: nowrap;
+			align-items: center;
+			gap: 4px;
+			padding: 6px;
+			margin-bottom: 8px;
+			background: #f8fafc;
+			border: 1px solid var(--border-color);
+			border-radius: 10px;
+			position: relative;
+		}
+		.editor-toolbar button {
+			min-width: 30px;
+			height: 30px;
+			padding: 0 7px;
+			background: #fff;
+			border: 1px solid var(--border-color);
+			border-radius: 6px;
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: #334155;
+			cursor: pointer;
+			transition: background 0.15s;
+		}
+		.editor-toolbar button:hover { background: #ede9fe; }
+		.editor-toolbar button.active {
+			background: #7c3aed;
+			border-color: #7c3aed;
+			color: #fff;
+		}
+		.editor-toolbar .sep {
+			width: 1px;
+			height: 22px;
+			background: var(--border-color);
+			margin: 0 3px;
+		}
+		.editor-toolbar .swatch {
+			width: 22px;
+			min-width: 22px;
+			height: 22px;
+			padding: 0;
+			border-radius: 50%;
+		}
+
+		.rich-editor {
+			flex: 1 1 0;
+			min-height: 200px;
+			overflow-y: auto;
+			border: 1px dashed var(--border-color);
+			border-radius: 8px;
+			padding: 14px;
+			font-size: 1rem;
+			background: #faf5ff;
+			color: #334155;
+			outline: none;
+			line-height: 1.5;
+			overflow-wrap: anywhere;
+		}
+		.rich-editor:focus { border-color: #a855f7; background: #fff; }
+		.rich-editor:empty:before {
+			content: attr(data-placeholder);
+			color: #94a3b8;
+			pointer-events: none;
+		}
+		.editor-toolbar button.open {
+			background: #ede9fe;
+			border-color: #a855f7;
+		}
+		.tool-panel {
+			display: none;
+			position: absolute;
+			top: calc(100% + 4px);
+			left: 0;
+			right: 0;
+			z-index: 50;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 4px;
+			padding: 8px;
+			background: #ffffff;
+			border: 1px solid var(--border-color);
+			border-radius: 10px;
+			box-shadow: 0 10px 20px -5px rgba(0,0,0,0.15);
+		}
+		.tool-panel.show { display: flex; }
+		.tool-panel .swatch {
+			width: 26px;
+			min-width: 26px;
+			height: 26px;
+		}
+		.rich-editor ul { list-style: disc; padding-left: 1.6rem; margin: 4px 0; }
+		.rich-editor ol { list-style: decimal; padding-left: 1.6rem; margin: 4px 0; }
+		.rich-editor ul ul { list-style: circle; }
+		.rich-editor li { margin: 2px 0; }
+        .assignment-textarea:focus { border-color: #a855f7; background: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="workspace">
+        <!-- 1. SOUND MONITOR CARD -->
+        <div class="card sound-card">
+            <!-- Top Banner -->
+            <div class="sound-banner" id="soundBanner" style="margin-bottom: 10px;">
+                <div class="banner-icon" id="bannerIcon">🌱</div>
+                <div class="banner-title" id="bannerTitle">Quiet Work Time</div>
+                <div class="banner-sub" id="bannerSub">Noise levels are nice and calm!</div>
+            </div>
+
+            <!-- Middle Section: Vertical Meter + Stats -->
+            <div class="sound-middle" style="margin-bottom: 10px;">
+                <!-- Vertical Pill Meter -->
+                <div class="vertical-meter-container">
+                    <div class="vertical-pill">
+                        <div class="pill-fill" id="pillFill"></div>
+                        <div class="limit-line" id="limitLine">
+                            <span class="limit-text">LIMIT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards on the Right -->
+                <div class="sound-stats">
+                    <div class="stat-box">
+                        <span class="stat-label">CURRENT VOLUME</span>
+                        <span class="stat-value" id="currentVolNum">0%</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">TARGET LIMIT</span>
+                        <span class="stat-value" id="targetLimitNum">60%</span>
+                    </div>
+                    <div class="stat-box" style="background: #fffbeb;">
+                        <span class="stat-label" style="color: #b45309;">ALERT COUNT</span>
+                        <span class="stat-value" id="alertCounterDisplay" style="color: #78350f; font-size: 0.95rem; white-space: nowrap;">0 / 3</span>
+                        <button class="reset-count-btn" id="resetAlertCountBtn" title="Reset alert count to 0">↺ Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cooldown Timer (15 sec) -->
+            <div id="cooldownTimer" class="cooldown-box" style="margin-bottom: 2px; text-align: center; padding: 6px; background: #f3f4f6; border-radius: 8px; font-size: 0.85rem; color: #4b5563; font-weight: 500;">
+                ⏱️ Cooldown Timer: <span id="cooldownSeconds" style="font-weight: 700; color: #1f2937;">Ready</span>
+            </div>
+
+            <!-- Settings Popup Trigger Button -->
+            <button id="openSettingsBtn" onclick="document.getElementById('settingsModal').style.display='flex'" style="margin-bottom: 2px;" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-xl text-sm flex items-center justify-center gap-2 transition-all">
+                ⚙️ Open Sound Settings
+            </button>
+
+            <!-- Microphone Pause / Play Button -->
+            <button id="micToggleBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl shadow transition-all text-sm flex items-center justify-center gap-2">
+                <span id="micBtnIcon" style="font-size:1rem">🎤</span>
+                <span id="micBtnText">Connect Microphone</span>
+            </button>
+        </div>
+
+        <!-- SETTINGS MODAL / POPUP -->
+        <div id="settingsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div class="sound-controls-box" style="background: #ffffff; padding: 20px; border-radius: 16px; max-width: 360px; width: 90%; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">
+                    <h3 style="font-weight: 600; font-size: 1rem; color: #111827; margin: 0;">Sound Settings</h3>
+                    <button onclick="document.getElementById('settingsModal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #6b7280;">&times;</button>
+                </div>
+
+                <div style="width: 100%;">
+                    <div class="control-row">
+                        <span class="control-name">Noise Threshold Limit</span>
+                        <span class="control-val" id="thresholdValText">60%</span>
+                    </div>
+                    <input type="range" id="thresholdSlider" min="10" max="95" value="60">
+                </div>
+
+                <div style="width: 100%;">
+                    <div class="control-row">
+                        <span class="control-name">Microphone Sensitivity</span>
+                        <span class="control-val" id="sensitivityValText">1.5x</span>
+                    </div>
+                    <input type="range" id="sensitivitySlider" min="0.0" max="3.0" step="0.1" value="1.5">
+                </div>
+
+                <div style="width: 100%;">
+                    <div class="control-row" style="margin-bottom: 2px;">
+                        <span class="control-name">Auto Alert Sound:</span>
+                    </div>
+                    <select id="autoSoundSelect" class="control-select">
+                        <option value="church">Church Bell Ring</option>
+                        <option value="thunder">Thunder Strike</option>
+                        <option value="clearbell">Clear Bell Chime</option>
+                        <option value="chime">Gentle Chime</option>
+                        <option value="whistle">Attention Whistle</option>
+                    </select>
+                </div>
+
+                <div class="control-row toggle-row" style="margin-top: 2px;">
+                    <span class="control-name">Auto-Sound Alert <span class="toggle-hint">(Auto-rings when noisy)</span></span>
+                    <label class="switch">
+                        <input type="checkbox" id="autoAlertToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <button onclick="document.getElementById('settingsModal').style.display='none'" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2 rounded-xl text-sm transition-all" style="margin-top: 8px;">
+                    Done
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. TIMER CARD -->
+        <div class="card timer-card">
+            <div class="timer-main">
+                <div class="timer-adjustments">
+                    <button class="pill-btn" onclick="adjustTimer(-5)">-5m</button>
+                    <button class="pill-btn" onclick="adjustTimer(-1)">-1m</button>
+                    <button class="pill-btn" onclick="adjustTimer(1)">+1m</button>
+                    <button class="pill-btn" onclick="adjustTimer(5)">+5m</button>
+                </div>
+                <div class="timer-display" id="timerDisplay">07:00</div>
+                <div class="timer-actions">
+                    <button class="main-btn" id="timerStartBtn">Start</button>
+                    <button class="main-btn secondary" id="timerResetBtn">Reset</button>
+                </div>
+            </div>
+            <div class="clock-box">
+                <div class="clock-label">🕒 LOCAL TIME</div>
+                <div class="clock-time" id="clockTime">--:--:--</div>
+            </div>
+        </div>
+
+        <!-- 3. ASSIGNMENT CARD -->
+        <div class="card assignment-card">
+            <h1 class="welcome-title">Hello & Welcome!!</h1>
+            <div class="sub-teacher">Sub: Ms. Flocker</div>
+            <div class="assignments-heading">Today's Assignments:</div>
+		<div class="editor-toolbar" id="editorToolbar">
+			<button data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+			<button data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+			<button data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+			<button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+			<span class="sep"></span>
+			<button data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+			<button data-cmd="insertOrderedList" title="Numbered list">1≡</button>
+			<span class="sep"></span>
+			<button data-panel="colorPanel" title="Text color">A ▾</button>
+			<button data-panel="hilitePanel" title="Highlight">🖍️ ▾</button>
+			<button data-panel="morePanel" title="More tools">⋯</button>
+
+			<!-- Text color tray -->
+			<div class="tool-panel" id="colorPanel">
+				<button class="swatch" data-color="#111827" style="background:#111827" title="Black"></button>
+				<button class="swatch" data-color="#dc2626" style="background:#dc2626" title="Red"></button>
+				<button class="swatch" data-color="#ea580c" style="background:#ea580c" title="Orange"></button>
+				<button class="swatch" data-color="#16a34a" style="background:#16a34a" title="Green"></button>
+				<button class="swatch" data-color="#2563eb" style="background:#2563eb" title="Blue"></button>
+				<button class="swatch" data-color="#7c3aed" style="background:#7c3aed" title="Purple"></button>
+			</div>
+
+			<!-- Highlight tray -->
+			<div class="tool-panel" id="hilitePanel">
+				<button class="swatch" data-hilite="#fef08a" style="background:#fef08a" title="Yellow highlight"></button>
+				<button class="swatch" data-hilite="#bbf7d0" style="background:#bbf7d0" title="Green highlight"></button>
+				<button class="swatch" data-hilite="#bfdbfe" style="background:#bfdbfe" title="Blue highlight"></button>
+				<button class="swatch" data-hilite="#fbcfe8" style="background:#fbcfe8" title="Pink highlight"></button>
+				<button data-hilite="transparent" title="Remove highlight">✖ None</button>
+			</div>
+
+			<!-- More tools tray -->
+			<div class="tool-panel" id="morePanel">
+				<button data-cmd="justifyLeft" title="Align left">⬅</button>
+				<button data-cmd="justifyCenter" title="Center">↔</button>
+				<button data-cmd="justifyRight" title="Align right">➡</button>
+				<span class="sep"></span>
+				<button data-cmd="outdent" title="Decrease indent">⇤</button>
+				<button data-cmd="indent" title="Increase indent">⇥</button>
+				<span class="sep"></span>
+				<button data-size="-1" title="Smaller text">A−</button>
+				<button data-size="1" title="Larger text">A+</button>
+				<span class="sep"></span>
+				<button data-cmd="undo" title="Undo">↶</button>
+				<button data-cmd="redo" title="Redo">↷</button>
+				<button data-cmd="removeFormat" title="Clear formatting">Tx</button>
+			</div>
+		</div>
+		<div class="rich-editor" id="assignmentBox" contenteditable="true" data-placeholder="Type here..."></div>    </div>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Timer Logic
+        let timerSeconds = 7 * 60;
+        let timerInterval = null;
+        let timerRunning = false;
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerStartBtn = document.getElementById('timerStartBtn');
+        const timerResetBtn = document.getElementById('timerResetBtn');
+
+        function renderTimer() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            timerDisplay.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function adjustTimer(mins) {
+            timerSeconds = Math.max(0, timerSeconds + (mins * 60));
+            renderTimer();
+        }
+
+        timerStartBtn.addEventListener('click', () => {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+                timerStartBtn.innerText = 'Start';
+                timerStartBtn.style.background = 'var(--primary)';
+            } else {
+                if (timerSeconds <= 0) timerSeconds = 420;
+                timerRunning = true;
+                timerStartBtn.innerText = 'Pause';
+                timerStartBtn.style.background = '#ef4444';
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        renderTimer();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        timerStartBtn.innerText = 'Start';
+                        timerStartBtn.style.background = 'var(--primary)';
+                        playRinger(autoSoundSelect.value);
+                    }
+                }, 1000);
+            }
+        });
+
+        timerResetBtn.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerSeconds = 7 * 60;
+            renderTimer();
+            timerStartBtn.innerText = 'Start';
+            timerStartBtn.style.background = 'var(--primary)';
+        });
+
+        // Audio & Live Microphone Meter Logic
+        let audioCtx = null;
+        let analyser = null;
+        let micStream = null;
+        let isMonitoring = false;
+
+        let alertCount = 0;
+        let cooldownActive = false;
+        let cooldownInterval = null;
+
+        const pillFill = document.getElementById('pillFill');
+        const limitLine = document.getElementById('limitLine');
+        const currentVolNum = document.getElementById('currentVolNum');
+        const targetLimitNum = document.getElementById('targetLimitNum');
+        const thresholdSlider = document.getElementById('thresholdSlider');
+        const sensitivitySlider = document.getElementById('sensitivitySlider');
+        const thresholdValText = document.getElementById('thresholdValText');
+        const sensitivityValText = document.getElementById('sensitivityValText');
+        const autoSoundSelect = document.getElementById('autoSoundSelect');
+        const autoAlertToggle = document.getElementById('autoAlertToggle');
+        const alertCounterDisplay = document.getElementById('alertCounterDisplay');
+
+        const soundBanner = document.getElementById('soundBanner');
+        const bannerIcon = document.getElementById('bannerIcon');
+        const bannerTitle = document.getElementById('bannerTitle');
+        const bannerSub = document.getElementById('bannerSub');
+
+        const micToggleBtn = document.getElementById('micToggleBtn');
+        const micBtnText = document.getElementById('micBtnText');
+
+        const cooldownTimerBox = document.getElementById('cooldownTimer');
+        const cooldownSecondsSpan = document.getElementById('cooldownSeconds');
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        window.addEventListener('load', () => {
+            startMicrophone();
+        });
+
+        function resumeAudioOnGesture() {
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        ['pointerdown', 'keydown', 'touchstart'].forEach(evt =>
+            document.addEventListener(evt, resumeAudioOnGesture, { capture: true })
+        );
+
+        // ===== Mic Pause / Play =====
+        let micPaused = false;
+        let rafId = null;
+        const micBtnIcon = document.getElementById('micBtnIcon');
+
+        function updateMicButton() {
+            micToggleBtn.classList.remove('bg-emerald-500','hover:bg-emerald-600','bg-amber-500','hover:bg-amber-600','bg-rose-500','hover:bg-rose-600');
+            if (!isMonitoring) {
+                micBtnIcon.textContent = '🎤';
+                micBtnText.textContent = 'Connect Microphone';
+                micToggleBtn.classList.add('bg-emerald-500','hover:bg-emerald-600');
+            } else if (audioCtx && audioCtx.state === 'suspended') {
+                micBtnIcon.textContent = '▶️';
+                micBtnText.textContent = 'Click Anywhere to Start Listening';
+                micToggleBtn.classList.add('bg-amber-500','hover:bg-amber-600');
+            } else if (micPaused) {
+                micBtnIcon.textContent = '▶️';
+                micBtnText.textContent = 'Mic Paused – Tap to Play';
+                micToggleBtn.classList.add('bg-amber-500','hover:bg-amber-600');
+            } else {
+                micBtnIcon.textContent = '⏸️';
+                micBtnText.textContent = 'Mic On – Tap to Pause';
+                micToggleBtn.classList.add('bg-emerald-500','hover:bg-emerald-600');
+            }
+        }
+
+        function setMicPaused(paused) {
+            micPaused = paused;
+            if (micStream) micStream.getAudioTracks().forEach(t => t.enabled = !paused);
+            cancelAnimationFrame(rafId);
+            if (paused) {
+                pillFill.style.height = '0%';
+                currentVolNum.textContent = '0%';
+                soundBanner.classList.remove('warning');
+                bannerIcon.textContent = '⏸️';
+                bannerTitle.textContent = 'Mic Paused';
+                bannerSub.textContent = 'Not listening right now.';
+            } else {
+                processAudio();
+            }
+            updateMicButton();
+        }
+
+        micToggleBtn.addEventListener('click', async () => {
+            if (!isMonitoring) { await startMicrophone(); return; }
+            if (audioCtx && audioCtx.state === 'suspended') { await audioCtx.resume(); updateMicButton(); return; }
+            setMicPaused(!micPaused);
+        });
+
+        async function startMicrophone() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+                    video: false
+                });
+                const ctx = getAudioContext();
+
+                const source = ctx.createMediaStreamSource(micStream);
+                analyser = ctx.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+
+                isMonitoring = true;
+                micPaused = false;
+                updateMicButton();
+                ctx.onstatechange = () => updateMicButton();
+
+                processAudio();
+            } catch (err) {
+                console.warn("Microphone prompt blocked or unavailable inside iframe:", err);
+                micBtnText.textContent = "Connect Microphone (Click to Retry)";
+            }
+        }
+
+        function stopMicrophone() {
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+            }
+            isMonitoring = false;
+            analyser = null;
+            micBtnText.textContent = "Connect Microphone";
+            micToggleBtn.classList.remove('bg-rose-500', 'hover:bg-rose-600');
+            micToggleBtn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+
+            pillFill.style.height = "0%";
+            currentVolNum.textContent = "0%";
+        }
+
+        function processAudio() {
+            if (!isMonitoring || !analyser || micPaused) return;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                sum += dataArray[i];
+            }
+            let average = sum / bufferLength;
+
+            const sensitivity = parseFloat(sensitivitySlider.value);
+            let volumePercent = Math.min(100, Math.max(0, Math.round((average / 50) * 100 * sensitivity)));
+
+            updateMeterVisuals(volumePercent);
+
+            rafId = requestAnimationFrame(processAudio);
+        }
+
+        function updateMeterVisuals(volume) {
+            const threshold = parseInt(thresholdSlider.value);
+
+            pillFill.style.height = `${volume}%`;
+            currentVolNum.textContent = `${volume}%`;
+
+            if (volume > threshold) {
+                pillFill.style.background = "#ef4444";
+                soundBanner.classList.add('warning');
+                bannerIcon.textContent = "🚨";
+                bannerTitle.textContent = "Too Loud!";
+                bannerSub.textContent = "Noise limit exceeded!";
+
+                if (autoAlertToggle.checked && isMonitoring && !cooldownActive) {
+                    triggerAlertSound();
+                }
+            } else if (volume > threshold * 0.75) {
+                pillFill.style.background = "#f59e0b";
+                soundBanner.classList.remove('warning');
+                bannerIcon.textContent = "⚠️";
+                bannerTitle.textContent = "Getting Loud";
+                bannerSub.textContent = "Voices rising. Lower volume slightly.";
+            } else {
+                pillFill.style.background = "#10b981";
+                soundBanner.classList.remove('warning');
+                bannerIcon.textContent = "🌱";
+                bannerTitle.textContent = "Quiet Work Time";
+                bannerSub.textContent = "Noise levels are nice and calm!";
+            }
+        }
+
+        function triggerAlertSound() {
+            const selectedSound = autoSoundSelect.value;
+            playRinger(selectedSound);
+
+            alertCount++;
+            alertCounterDisplay.textContent = `${alertCount} / 3`;
+
+            startCooldownTimer(15);
+        }
+
+        function startCooldownTimer(seconds) {
+            cooldownActive = true;
+            let remaining = seconds;
+
+            cooldownTimerBox.style.background = '#fee2e2';
+            cooldownTimerBox.style.color = '#991b1b';
+            cooldownSecondsSpan.textContent = remaining + 's';
+
+            if (cooldownInterval) clearInterval(cooldownInterval);
+
+            cooldownInterval = setInterval(() => {
+                remaining--;
+                cooldownSecondsSpan.textContent = remaining + 's';
+
+                if (remaining <= 0) {
+                    clearInterval(cooldownInterval);
+                    cooldownActive = false;
+
+                    cooldownTimerBox.style.background = '#f3f4f6';
+                    cooldownTimerBox.style.color = '#4b5563';
+                    cooldownSecondsSpan.textContent = 'Ready';
+                }
+            }, 1000);
+        }
+
+        document.getElementById('resetAlertCountBtn').addEventListener('click', () => {
+            alertCount = 0;
+            alertCounterDisplay.textContent = `${alertCount} / 3`;
+        });
+
+        thresholdSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            thresholdValText.textContent = `${val}%`;
+            targetLimitNum.textContent = `${val}%`;
+            limitLine.style.bottom = `${val}%`;
+        });
+
+        sensitivitySlider.addEventListener('input', (e) => {
+            sensitivityValText.textContent = `${e.target.value}x`;
+        });
+
+        // High-decibel, piercing attention-grabbing offline audio synthesizers for large rooms
+        function playRinger(type) {
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+
+            if (type === 'church') {
+                // Higher frequencies representing a British tenor/treble bell harmonic structure
+                const freqs = [523.25, 659.25, 1046.50, 1318.51, 2093.00]; // C5, E5, C6, E6, C7 spectrum
+                freqs.forEach((f, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+
+                    // Use 'sine' for pure harmonic partials, or 'triangle' for a slightly brighter metallic edge
+                    osc.type = i < 2 ? 'triangle' : 'sine';
+
+                    // Slight detuning/inharmonicity for realistic bell timbre
+                    osc.frequency.setValueAtTime(f + (i * 2.5), now);
+
+                    // Extend total duration to roughly 5 seconds with a long, resonant decay
+                    const decay = 5.0 - (i * 0.4);
+
+                    // Initial strike volume scaled per partial
+                    gain.gain.setValueAtTime(0.4 / (i + 1), now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + decay);
+                });
+            } else if (type === 'clearbell') {
+                const freqs = [1046.50, 1318.51, 1567.98, 2093.00];
+                freqs.forEach(f => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 2.2);
+                });
+            } else if (type === 'chime') {
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now);
+                osc2.frequency.setValueAtTime(659.25, now);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(ctx.destination);
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 1.8);
+                osc2.stop(now + 1.8);
+            } else if (type === 'whistle') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                // Sine wave creates a clean, piercing tone that cuts through ambient noise
+                osc.type = 'sine';
+
+                // Start at a high piercing pitch (3200 Hz)
+                osc.frequency.setValueAtTime(3200, now);
+
+                // Rapidly sweep up to an ultra-high peak (4200 Hz) for that sharp blow sound
+                osc.frequency.linearRampToValueAtTime(4200, now + 0.15);
+
+                // Add a slight oscillation/trill effect characteristic of a pea whistle in a crowd
+                osc.frequency.linearRampToValueAtTime(3500, now + 0.3);
+                osc.frequency.linearRampToValueAtTime(4000, now + 0.45);
+                osc.frequency.linearRampToValueAtTime(3200, now + 0.6);
+
+                // Sharp attack and clean cutoff envelope
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.6, now + 0.05); // Quick punchy start
+                gain.gain.setValueAtTime(0.6, now + 0.5);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8); // Crisp 0.8s total duration
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            } else if (type === 'thunder') {
+                const bufferSize = ctx.sampleRate * 2.5;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(150, now);
+                filter.frequency.linearRampToValueAtTime(40, now + 2.5);
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.7, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start(now);
+                noise.stop(now + 2.5);
+            }
+        }
+		// ===== Rich Text Editor =====
+		const assignmentBox = document.getElementById('assignmentBox');
+		const editorToolbar = document.getElementById('editorToolbar');
+
+		// Keep the text selection when clicking toolbar buttons
+		editorToolbar.addEventListener('mousedown', (e) => {
+			if (e.target.closest('button')) e.preventDefault();
+		});
+
+		editorToolbar.addEventListener('click', (e) => {
+			const btn = e.target.closest('button');
+			if (!btn) return;
+			assignmentBox.focus();
+			document.execCommand('styleWithCSS', false, true);
+
+			if (btn.dataset.cmd) {
+				document.execCommand(btn.dataset.cmd, false, null);
+			} else if (btn.dataset.size) {
+				let current = parseInt(document.queryCommandValue('fontSize')) || 3;
+				let next = Math.min(7, Math.max(1, current + parseInt(btn.dataset.size)));
+				document.execCommand('fontSize', false, next);
+			} else if (btn.dataset.color) {
+				document.execCommand('foreColor', false, btn.dataset.color);
+			} else if (btn.dataset.hilite) {
+				document.execCommand('hiliteColor', false, btn.dataset.hilite);
+			}
+			updateToolbarState();
+			
+			// ===== Collapsible tool trays =====
+			const toolPanels = editorToolbar.querySelectorAll('.tool-panel');
+
+			function closePanels() {
+				toolPanels.forEach(p => p.classList.remove('show'));
+				editorToolbar.querySelectorAll('[data-panel]').forEach(b => b.classList.remove('open'));
+			}
+
+			editorToolbar.addEventListener('click', (e) => {
+				const btn = e.target.closest('button');
+				if (!btn) return;
+
+				if (btn.dataset.panel) {
+					const panel = document.getElementById(btn.dataset.panel);
+					const wasOpen = panel.classList.contains('show');
+					closePanels();
+					if (!wasOpen) {
+						panel.classList.add('show');
+						btn.classList.add('open');
+					}
+				} else if (btn.closest('.tool-panel') && !btn.dataset.size) {
+					// Close the tray after picking something (A−/A+ stays open for repeated clicks)
+					closePanels();
+				}
+			});
+
+			// Click anywhere else to close an open tray
+			document.addEventListener('click', (e) => {
+				if (!editorToolbar.contains(e.target)) closePanels();
+			});
+			saveState();
+		});
+
+		// Highlight the buttons that are active at the cursor
+		function updateToolbarState() {
+			editorToolbar.querySelectorAll('button[data-cmd]').forEach(btn => {
+				const cmd = btn.dataset.cmd;
+				if (['undo', 'redo', 'removeFormat', 'indent', 'outdent'].includes(cmd)) return;
+				let on = false;
+				try { on = document.queryCommandState(cmd); } catch (e) {}
+				btn.classList.toggle('active', on);
+			});
+		}
+		document.addEventListener('selectionchange', () => {
+			if (document.activeElement === assignmentBox) updateToolbarState();
+		});
+
+		// Paste as plain text so messy formatting from other sites doesn't sneak in
+		assignmentBox.addEventListener('paste', (e) => {
+			e.preventDefault();
+			const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+			document.execCommand('insertText', false, text);
+		});
+
+		// Keep the placeholder working when everything is deleted
+		assignmentBox.addEventListener('input', () => {
+			if (assignmentBox.textContent.trim() === '' && !assignmentBox.querySelector('li, img')) {
+				assignmentBox.innerHTML = '';
+			}
+			saveState();
+		});
+
+		// ===== Save & Restore (survives refresh) =====
+		const STORE_KEY = 'classroomDashboardState';
+
+		function saveState() {
+			try {
+				localStorage.setItem(STORE_KEY, JSON.stringify({
+					assignmentsHTML: assignmentBox.innerHTML,
+					threshold: thresholdSlider.value,
+					sensitivity: sensitivitySlider.value,
+					sound: autoSoundSelect.value,
+					autoAlert: autoAlertToggle.checked,
+					alertCount: alertCount,
+					timerSeconds: timerSeconds
+				}));
+			} catch (e) {
+				console.warn('Could not save:', e);
+			}
+		}
+
+		function loadState() {
+			try {
+				const raw = localStorage.getItem(STORE_KEY);
+				if (!raw) return;
+				const s = JSON.parse(raw);
+
+				if (typeof s.assignmentsHTML === 'string') {
+					assignmentBox.innerHTML = s.assignmentsHTML;
+				} else if (typeof s.assignments === 'string') {
+					// Text saved by the older plain text box
+					assignmentBox.textContent = s.assignments;
+					assignmentBox.innerHTML = assignmentBox.innerHTML.replace(/\n/g, '<br>');
+				}
+
+				if (s.threshold) {
+					thresholdSlider.value = s.threshold;
+					thresholdSlider.dispatchEvent(new Event('input'));
+				}
+				if (s.sensitivity) {
+					sensitivitySlider.value = s.sensitivity;
+					sensitivitySlider.dispatchEvent(new Event('input'));
+				}
+				if (s.sound) autoSoundSelect.value = s.sound;
+				if (typeof s.autoAlert === 'boolean') autoAlertToggle.checked = s.autoAlert;
+
+				if (typeof s.alertCount === 'number') {
+					alertCount = s.alertCount;
+					alertCounterDisplay.textContent = `${alertCount} / 3`;
+				}
+				if (typeof s.timerSeconds === 'number') {
+					timerSeconds = s.timerSeconds;
+					renderTimer();
+				}
+			} catch (e) {
+				console.warn('Could not load saved data:', e);
+			}
+		}
+
+		loadState();
+
+		// Save on every change
+		[thresholdSlider, sensitivitySlider, autoSoundSelect, autoAlertToggle].forEach(el => {
+			el.addEventListener('input', saveState);
+			el.addEventListener('change', saveState);
+		});
+		document.getElementById('resetAlertCountBtn').addEventListener('click', saveState);
+
+		setInterval(saveState, 1000);
+		window.addEventListener('beforeunload', saveState);
+
+		// Save on every change
+		assignmentBox.addEventListener('input', saveState);
+		[thresholdSlider, sensitivitySlider, autoSoundSelect, autoAlertToggle].forEach(el => {
+			el.addEventListener('input', saveState);
+			el.addEventListener('change', saveState);
+		});
+		document.getElementById('resetAlertCountBtn').addEventListener('click', saveState);
+
+		// Catch timer ticks, alert count, and anything else
+		setInterval(saveState, 1000);
+		window.addEventListener('beforeunload', saveState);
+
+		// ===== Local Time Clock =====
+		const clockTime = document.getElementById('clockTime');
+		function updateClock() {
+			clockTime.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+		}
+		updateClock();
+		setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
